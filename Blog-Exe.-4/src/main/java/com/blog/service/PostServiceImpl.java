@@ -2,6 +2,7 @@ package com.blog.service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class PostServiceImpl implements PostService {
 	private ModelMapper modelMapper;
 	
 	@Autowired
-	private UserDao userDao;
+	private UserDao userDao; 
 	
 	@Autowired
 	private CategoryRepo categoryRepo;
@@ -52,39 +53,53 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public Post updatPost(PostDto postDto, Integer postId) {
-		// TODO Auto-generated method stub
-		return null;
+	public PostDto updatPost(PostDto postDto, Integer postId) {
+		Post post = this.postRepo.findById(postId).orElseThrow(()-> new ResourseNotFoundException("Post", "PostId", postId));
+		post.setPostTitel(postDto.getPostTitel());
+		post.setPostContent(postDto.getPostContent());
+		post.setImageName(postDto.getImageName());
+		Post updatedPost = this.postRepo.save(post);
+		
+		return this.modelMapper.map(updatedPost, PostDto.class);
 	}
 
 	@Override
 	public void deletePost(Integer postId) {
-		// TODO Auto-generated method stub
 		
+		Post post = this.postRepo.findById(postId).orElseThrow(()-> new ResourseNotFoundException("Post", "PostId", postId));
+		this.postRepo.delete(post);
 	}
 
 	@Override
-	public List<Post> getallPost() {
-		// TODO Auto-generated method stub
-		return null;
+	public List<PostDto> getallPost() {
+		List<Post> allPosts = this.postRepo.findAll();
+		List<PostDto> postDtos = allPosts.stream().map(post-> this.modelMapper.map(post, PostDto.class)).collect(Collectors.toList());
+		return postDtos;
 	}
 
 	@Override
-	public Post getPostById(Integer postId) {
-		// TODO Auto-generated method stub
-		return null;
+	public PostDto getPostById(Integer postId) {
+		Post post = this.postRepo.findById(postId).orElseThrow(()-> new ResourseNotFoundException("Post", "PostId", postId));
+		return this.modelMapper.map(post, PostDto.class);
 	}
 
 	@Override
-	public List<Post> getPostsBycategory(Integer categoryId) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<PostDto> getPostsBycategory(Integer categoryId) {
+		
+		Category category=this.categoryRepo.findById(categoryId).orElseThrow(()-> new ResourseNotFoundException("Category", "categoryId", categoryId));
+		List<Post> posts = this.postRepo.findByCategory(category);
+		
+		List<PostDto> postDtos = posts.stream().map(post-> this.modelMapper.map(post, PostDto.class)).collect(Collectors.toList());
+		return postDtos;
 	}
 
 	@Override
-	public List<Post> getPostsByUser(Integer userId) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<PostDto> getPostsByUser(Integer userId) {
+		User user=this.userDao.findById(userId).orElseThrow(()-> new ResourseNotFoundException("User", "UserID", userId));
+		List<Post> byUser = this.postRepo.findByUser(user);
+		List<PostDto> collect = byUser.stream().map(post-> this.modelMapper.map(post, PostDto.class)).collect(Collectors.toList());
+		
+		return collect;
 	}
 
 	@Override
